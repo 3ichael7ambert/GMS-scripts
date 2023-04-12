@@ -1,0 +1,2 @@
+// Initialize the elemental array
+elemental = array_create(4, 0);  // [fire, water, earth, air]

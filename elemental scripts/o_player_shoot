@@ -1,0 +1,8 @@
+// In the player's shooting event
+
+// Create a bullet
+var bullet = instance_create_layer(x, y, "Bullets", obj_bullet);
+
+// Assign bullet's attributes based on the elemental array
+bullet.elemental_strength = max(elemental);
+bullet.elemental_weakness = min(elemental);

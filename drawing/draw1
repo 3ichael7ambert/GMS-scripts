@@ -1,0 +1,17 @@
+// Set the draw style to exponential
+draw_set_proportional(true);
+
+// Set the vertical scaling factor for exponential drawing
+var scalingFactor = 2;
+
+// Draw the top half of the room/map
+draw_set_viewport(0, 0, room_width, room_height / 2);
+draw_set_hviewport(0, 0, room_width, room_height / 2 * scalingFactor);
+draw_clear(0);
+// Draw your objects here...
+
+// Draw the bottom half of the room/map
+draw_set_viewport(0, room_height / 2, room_width, room_height);
+draw_set_hviewport(0, room_height / 2 * scalingFactor, room_width, room_height);
+draw_clear(0);
+// Draw your objects here...

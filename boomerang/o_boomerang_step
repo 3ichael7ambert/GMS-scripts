@@ -1,0 +1,32 @@
+// Speed of the boomerang
+speed = 10;
+
+// If the boomerang is not returning to the player
+if (!returning) {
+    // Move the boomerang in the direction it was thrown
+    x += lengthdir_x(speed, direction);
+    y += lengthdir_y(speed, direction);
+}
+
+// If the boomerang has gone too far away from the player
+if (distance_to_object(player) > max_distance) {
+    // Start returning to the player
+    returning = true;
+    // Reverse the direction of the boomerang
+    direction += 180;
+}
+
+// If the boomerang is returning to the player
+if (returning) {
+    // Move the boomerang towards the player
+    x += lengthdir_x(speed, direction);
+    y += lengthdir_y(speed, direction);
+    // If the boomerang has reached the player
+    if (distance_to_object(player) < 10) {
+        // End the boomerang's motion
+        speed = 0;
+        direction = 0;
+        // Notify the player that the boomerang has returned
+        player.boomerang_returned();
+    }
+}

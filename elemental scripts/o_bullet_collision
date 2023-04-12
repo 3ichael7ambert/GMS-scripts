@@ -1,0 +1,15 @@
+// In the obj_bullet Collision Event with obj_bullet or obj_player
+
+var other_bullet = other;  // Reference to the other bullet or player
+
+// Check for the elemental interaction
+if (elemental_strength == other_bullet.elemental_strength || elemental_weakness == other_bullet.elemental_weakness) {
+    // Attack nullified
+    instance_destroy();
+    instance_destroy(other_bullet);
+} else if (elemental_strength != other_bullet.elemental_weakness) {
+    // Attack ineffective
+} else {
+    // Attack is effective
+    // Apply damage or other effects
+}

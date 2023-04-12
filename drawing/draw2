@@ -1,0 +1,25 @@
+// Set the draw style to exponential
+draw_set_proportional(true);
+
+// Set the vertical scaling factor for exponential drawing
+var scalingFactor = 2;
+
+// Set the camera position and rotation
+var cameraX = view_xview[0] + view_wview[0] / 2;
+var cameraY = view_yview[0] + view_hview[0] / 2;
+var cameraRotation = 0; // Change this value to rotate the camera
+
+// Loop through each pixel in the screen
+for (var x = 0; x < view_wport[0]; x++)
+{
+    for (var y = 0; y < view_hport[0]; y++)
+    {
+        // Calculate the position of the pixel in the world
+        var worldX = cameraX + (x - view_wport[0] / 2) * scalingFactor;
+        var worldY = cameraY + (y - view_hport[0] / 2) * scalingFactor;
+
+        // Draw the pixel at the calculated world position
+        draw_set_color(c_white);
+        draw_point(worldX, worldY);
+    }
+}

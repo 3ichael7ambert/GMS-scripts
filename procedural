@@ -1,0 +1,50 @@
+//CREATE
+
+// Set the starting position of the level
+level_start_x = 0;
+level_start_y = 0;
+
+// Set the size of each chunk of the level
+chunk_width = 1024;
+chunk_height = 1024;
+
+// Set the maximum number of chunks that can be generated
+max_chunks = 10;
+
+// Initialize the chunk counter
+chunk_count = 0;
+
+
+
+
+
+//STEP
+// Check if the player has moved into a new chunk of the level
+if (player.x > (level_start_x + (chunk_width * chunk_count))) {
+    // Generate a new chunk of the level
+    generate_chunk();
+    
+    // Increment the chunk counter
+    chunk_count++;
+    
+    // Destroy any chunks that are too far behind the player
+    if (chunk_count > max_chunks) {
+        instance_destroy(chunk_count - max_chunks);
+    }
+}
+
+
+
+
+//generate_chunk()
+// Generate a new chunk of the level
+for (var i = 0; i < num_enemies; i++) {
+    // Generate a random position for the enemy within the chunk
+    var x = irandom_range(0, chunk_width);
+    var y = irandom_range(0, chunk_height);
+    
+    // Create an instance of the enemy at the random position
+    instance_create(x, y, obj_enemy);
+}
+
+// Repeat for other level elements (obstacles, power-ups, etc.)

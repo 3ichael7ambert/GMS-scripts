@@ -1,0 +1,19 @@
+// Variables to keep track of the boomerang
+var has_boomerang = true;
+var boomerang_instance;
+
+// Throw the boomerang when the player presses the spacebar
+if keyboard_check_pressed(vk_space) and has_boomerang {
+    // Create an instance of the boomerang
+    boomerang_instance = instance_create(x, y, obj_boomerang);
+    // Set the direction of the boomerang to the direction the player is facing
+    boomerang_instance.direction = direction;
+    // The player no longer has a boomerang until it returns
+    has_boomerang = false;
+}
+
+// Called when the boomerang returns to the player
+function boomerang_returned() {
+    // The player now has a boomerang again
+    has_boomerang = true;
+}
