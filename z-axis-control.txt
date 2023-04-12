@@ -1,0 +1,194 @@
+/// @desc init_zaxis(_zpos, _height, _shape);
+function init_zaxis(_zpos=0, _height=16, _shape = "rectangle"){
+	position = {
+		z: _zpos,			/// position on z axis
+		z_speed: 0,		/// speed in z direction
+		z_ground: 0,	/// lowest position you can fall to
+		z_gravity: 0.5,	/// accelerate down
+		z_height: _height,	/// height of object
+		z_step: 4,		/// climb on object a little higher
+		shape: _shape,	/// "square", "circle", "rectangle" supported, defaults to "square"
+		shape_data: [45,135,225,315],	/// set default shape data for a square
+		floor_obj: noone,
+		get_floor_speed: function(){
+			var _floor_spd = 0;
+			if(self.floor_obj >= 0 && instance_exists(self.floor_obj)){
+				_floor_spd = self.floor_obj.position.z_speed;
+			}
+			return _floor_spd;
+		},
+		get_floor_vector: function(){
+			var _floor_vec = [0,0];
+			/// if on the ground and object is beneath
+			if(self.floor_obj >= 0 && instance_exists(self.floor_obj)){
+				/// additional check for overlapping objects
+				var _floor_pos = self.floor_obj.position;
+				if(self.z <= _floor_pos.z + _floor_pos.z_height){
+					_floor_vec = [self.floor_obj.hspeed, self.floor_obj.vspeed];
+				}
+			}
+			return _floor_vec;
+		},
+		fix_angle: function(_angle){
+			if(self.shape == "circle") return _angle;
+			if(_angle < self.shape_data[0]) return 0;
+			if(_angle < self.shape_data[1]) return 90;
+			if(_angle < self.shape_data[2]) return 180;
+			if(_angle < self.shape_data[3]) return 270;
+			return 0;
+		}
+	};
+	
+	/// calculate shape data for a rectangle
+	if(_shape == "rectangle"){
+		var _cx = (bbox_left + bbox_right) * 0.5;
+		var _cy = (bbox_top + bbox_bottom) * 0.5; 
+		/// top right corner
+		position.shape_data[0] = point_direction(_cx,_cy,bbox_top,bbox_right);
+		/// top left corner
+		position.shape_data[1] = point_direction(_cx,_cy,bbox_top,bbox_left);
+		/// bottom left corner
+		position.shape_data[2] = point_direction(_cx,_cy,bbox_bottom,bbox_left);
+		/// bottom right corner
+		position.shape_data[3] = point_direction(_cx,_cy,bbox_bottom,bbox_right);
+	}
+}
+
+/// run this in the step Event for z movement to work
+function update_zaxis(){
+	/// always move when speed is applied
+	position.z += position.z_speed;
+	/// move in z direction, 
+	/// Z_Axis is assumed to point in the -Y direction (+z)
+	/// therefore, positive z_speed is up, -z_speed is down
+	if(position.z > position.z_ground){
+		position.z_speed -= position.z_gravity;
+	} else {
+		/// if below ground, adjust to ground position
+		position.z = max(position.z, position.z_ground);
+		/// if falling, stop falling -- but adjust for platform falling
+		var _floor_spd = position.get_floor_speed();
+		position.z_speed = max(position.z_speed, _floor_spd);
+	}
+}
+
+
+function update_zground(_targets){
+	/// check for collision
+	var _list = ds_list_create();
+	var _detected = false;
+	/// default lowest point
+	position.z_ground = 0;
+	position.floor_obj = noone;
+	
+	if(instance_place_list(x, y, _targets, _list, 0)){
+	
+		/// loop through all collision instances
+		for(var _i = 0; _i < ds_list_size(_list); _i++){
+			var _collide = _list[| _i];
+		
+			/// if collision occurs, we want to get on top of that object if possible
+			if(_collide != noone && variable_instance_exists(_collide, "position")){
+				var _pos2 = _collide.position;
+				/// if self is above the top of the other object, z_ground will now be at that height
+				if(position.z + position.z_step > _pos2.z + _pos2.z_height){
+					position.z_ground = max(position.z_ground, _pos2.z + _pos2.z_height);
+					position.floor_obj = _collide;
+					_detected = true;
+				} 
+			}
+		}
+	}
+	/// remove list to clear memory
+	ds_list_destroy(_list);
+}
+
+/// run this in the step Event, set "targets" to obstacles you want to jump on
+function collision_check_zaxis(_xto, _yto, _targets, _get_obj=false){
+	/// check for collision
+	var _list = ds_list_create();
+	if(instance_place_list(_xto, _yto, _targets, _list, 0)){
+	
+		/// loop through all collision instances
+		for(var _i = 0; _i < ds_list_size(_list); _i++){
+			var _collide = _list[| _i];
+		
+			/// if collision occurs, we want to get on top of that object if possible
+			if(_collide != noone && variable_instance_exists(_collide, "position")){
+				var _pos2 = _collide.position;
+				/// if self is above the top of the other object, z_ground will now be at that height
+				var _zfeet = position.z + position.z_step;
+				var _zhead = position.z + position.z_height;
+			
+				/// check if connecting with block
+				if(_zfeet < _pos2.z + _pos2.z_height && _zhead > _pos2.z){
+					/// also, going to fall into this!
+					if(position.z_ground - position.z_step < _pos2.z + _pos2.z_height){
+						ds_list_destroy(_list);
+						if(_get_obj){
+							return _collide;	
+						}
+						return true;
+					}
+				} 
+			}
+		}
+	}
+	/// remove list to clear memory
+	ds_list_destroy(_list);
+	if(_get_obj){
+		return noone;	
+	}
+	return false;
+}
+
+/// call this to jump
+/// force is the speed of the jump
+/// on_ground is whether to free jump or require being on the ground
+function jump_zaxis(_force, _on_ground=true){
+	if(_on_ground && (position.z - position.z_step) > position.z_ground){
+		return 0;
+	}
+	position.z_speed += _force;
+}
+
+/// draw self on z_axis (best for debug)
+function draw_zaxis(_shape_id=0){
+	var _yy = y;
+	var _aa = image_alpha;
+	var _bb = image_blend;
+	y -= position.z_ground;
+	draw_sprite_stretched_ext(spr_shadow,_shape_id,
+		bbox_left,bbox_top,bbox_right-bbox_left,bbox_bottom-bbox_top,
+		c_black, 0.5
+	);
+	y = _yy;
+
+	image_alpha = _aa;
+	image_blend = _bb;
+	y -= position.z;
+	draw_self();
+	y = _yy;
+}
+
+/// place in step event of slope object
+/// based on collision mask, works best as rectangle
+function update_slope_object(_player, _z1, _z2, _on_yaxis=1){
+	/// change height based on player position
+	/// z1 = top or left
+	/// z2 = bottom or right
+	/// on_yaxis -> slope is on yaxis
+	
+	var _ds = 0;	/// ratio between 0 and 1
+	if(_on_yaxis){
+		/// slope is on the Y axis, top z1 bottom z2
+		_ds = (_player.y - bbox_top) / (bbox_bottom - bbox_top);
+	} else {
+		// slope is on the X axis, left z1, right z2
+		_ds = (_player.x - bbox_left) / (bbox_right - bbox_left);
+	}
+	_ds = clamp(_ds, 0, 1);
+	
+	/// "height" changes depending on your position (like a slope)
+	position.z_height = lerp(_z1, _z2, _ds);
+}

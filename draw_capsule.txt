@@ -1,0 +1,86 @@
+// Script assets have changed for v2.3.0 see
+// https://help.yoyogames.com/hc/en-us/articles/360005277377 for more information
+/// @desc draw_capsule(x1,y1,r1,c1,x2,y2,r2,c2,spr,ind);
+/// @param x1
+/// @param y1
+/// @param r1
+/// @param c1
+/// @param x2
+/// @param y2
+/// @param r2
+/// @param c2
+/// @param sprite
+/// @param index
+function draw_capsule(x1,y1,r1,c1,x2,y2,r2,c2,spr,ind){
+
+	var tex = sprite_get_texture(spr, ind);
+	var uvs = sprite_get_uvs(spr, ind);
+	var dir = point_direction(x1,y1,x2,y2);
+	var dx = lengthdir_x(1, dir);
+	var dy = lengthdir_y(1, dir);
+
+	draw_primitive_begin_texture(pr_trianglelist, tex);
+
+	//=============== add "square" ================//
+	var v1 = vertex(x1 - dy*r1,y1 + dx*r1, uvs[0],uvs[1], c1);
+	var v2 = vertex(x2 - dy*r2,y2 + dx*r2, uvs[2],uvs[1], c2);
+	var v3 = vertex(x2 + dy*r2,y2 - dx*r2, uvs[2],uvs[3], c2);
+	var v4 = vertex(x1 + dy*r1,y1 - dx*r1, uvs[0],uvs[3], c1);
+
+	primitive_add_trianglelist(v1,v2,v3);
+	primitive_add_trianglelist(v1,v3,v4);
+	//================ add "circle" ===============//
+	var umid = [(uvs[0]+uvs[2])/2,(uvs[1]+uvs[3])/2];
+	for(var i = 0; i < 12; i++){
+	    var xx = x1;
+	    var yy = y1;
+	    var rr = r1;
+		var cc = c1;
+	    if(i < 6){
+	        xx = x2;
+	        yy = y2;
+	        rr = r2;
+			cc = c2;
+	    }
+	    var face = (i*30+dir+270)%360;
+	    var uface = (i*30+270)%360;
+    
+	    /// vertex 1
+	    var v1 = vertex(xx,yy, umid[0], umid[1], cc);
+    
+	    /// vertex 2
+	    v2 = vertex(xx + lengthdir_x(rr, face+30), yy + lengthdir_y(rr, face+30),
+	        umid[0]+lengthdir_x(0.5, uface+30), umid[1]+lengthdir_y(0.5, uface+30), cc);
+        
+	    /// vertex 3 
+	    v3 = vertex(xx + lengthdir_x(rr, face), yy + lengthdir_y(rr, face),
+	        umid[0]+lengthdir_x(0.5, uface), umid[1]+lengthdir_y(0.5, uface), cc);
+    
+	    /// build primitive
+	    primitive_add_trianglelist(v1,v2,v3);
+	}
+
+	draw_primitive_end();
+}
+
+
+/// @desc primitive_add_trianglelist(v1,v2,v3)
+/// @param v1
+/// @param v2
+/// @param v3
+function primitive_add_trianglelist(v1,v2,v3){
+	draw_vertex_texture_color(v1[0], v1[1], v1[2], v1[3], v1[4], 1);
+	draw_vertex_texture_color(v2[0], v2[1], v2[2], v2[3], v2[4], 1);
+	draw_vertex_texture_color(v3[0], v3[1], v3[2], v3[3], v3[4], 1);	
+}
+
+
+/// @desc vertex(x,y,u,v);
+/// @param x
+/// @param y
+/// @param u
+/// @param v
+/// @param color
+function vertex(_x,_y,_u,_v,_col=c_white){
+	return [_x,_y,_u,_v,_col];
+}
